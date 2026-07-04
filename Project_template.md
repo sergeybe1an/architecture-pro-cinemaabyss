@@ -58,7 +58,8 @@
 
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka http://localhost:8090 
-
+[task2-tests.png](task2-tests.png)
+[task2-kafka.png](task2-kafka.png)
 
 ## Задание 3
 
@@ -70,7 +71,7 @@
 
 ### CI/CD
 
- В папке .github/worflows доработайте деплой новых сервисов proxy и events в docker-build-push.yml , чтобы api-tests при сборке отрабатывали корректно при отправке коммита в вашу новую ветку.
+ В папке .github/worflows доработайте деплой новых сервисов proxy и events в docker-build-push.yml, чтобы api-tests при сборке отрабатывали корректно при отправке коммита в вашу новую ветку.
 
 Нужно доработать 
 ```yaml
