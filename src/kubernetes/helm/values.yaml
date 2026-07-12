@@ -3,9 +3,9 @@ global:
   namespace: cinemaabyss
   domain: cinemaabyss.example.com
 
-# Image pull secrets
+# Image pull secrets (copy from src/kubernetes/dockerconfigsecret.yaml after docker login ghcr.io)
 imagePullSecrets:
-  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjogewoJCQkiYXV0aCI6
+  dockerconfigjson: ewoJImF1dGhzIjogewoJCSJnaGNyLmlvIjoge30sCgkJImh0dHBzOi8vaW5kZXgZG9ja2VyLmlvL3YxLyI6IHt9Cgl9LAoJImNyZWRzU3RvcmUiOiAiZGVza3RvcCIsCgkiY3VycmVudENvbnRleHQiOiAiZGVmYXVsdCIKfQ==
 # Database configuration
 database:
   host: postgres
