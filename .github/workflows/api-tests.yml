@@ -2,93 +2,99 @@ name: API Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, cinema ]
     paths:
       - 'src/**'
       - 'tests/postman/**'
       - 'docker-compose.yml'
       - '.github/workflows/api-tests.yml'
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, cinema ]
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to run tests against'
+        description: Environment to run tests against
         required: true
-        default: 'docker'
+        default: docker
         type: choice
         options:
           - local
           - docker
-      test_folder:
-        description: 'Test folder to run (leave empty for all)'
-        required: false
-        type: string
 
 jobs:
   api-tests:
-    name: Run API Tests
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      - name: Set up Docker Compose
-        run: |
-          docker compose --version
-      
-      - name: Start services with Docker Compose
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Docker Compose version
+        run: docker compose version
+
+      - name: Start services
         run: |
           docker compose build
           docker compose up -d
 
-      - name: Show container status
-        run: |
-          docker compose ps
+      - name: Show containers
+        run: docker compose ps
 
-      - name: Wait for services
+      - name: Show Docker networks
         run: |
-          timeout 120 bash -c '
+          docker network ls
+          docker network inspect cinemaabyss-network || true
+
+      - name: Wait for proxy
+        run: |
+          timeout 180 bash -c '
             until curl -fs http://localhost:8000/health; do
-              echo "Waiting for proxy..."
-              sleep 2
+              echo "Waiting..."
+              sleep 5
             done
           '
-      
-      - name: Set up Node.js
+
+      - name: Verify monolith from Docker network
+        run: |
+          docker run --rm \
+            --network cinemaabyss-network \
+            alpine sh -c '
+              apk add --no-cache curl bind-tools
+              echo "=== DNS ==="
+              nslookup monolith || true
+              echo
+              echo "=== CURL ==="
+              curl -v http://monolith:8080/health || true
+            '
+
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: 18
+          cache: npm
           cache-dependency-path: tests/postman/package-lock.json
-      
-      - name: Install Newman and dependencies
+
+      - name: Install dependencies
         working-directory: tests/postman
         run: npm install
 
-      - name: Test Docker DNS
-        run: |
-          docker run --rm \
-            --network=cinemaabyss-network \
-            alpine sh -c "
-              apk add --no-cache curl bind-tools
-              echo '=== DNS ==='
-              nslookup monolith || true
-              echo '=== CURL ==='
-              curl -v http://monolith:8080/health || true
-            "
-      
+      - name: Build API tests image
+        working-directory: tests/postman
+        run: docker build -t cinemaabyss-api-tests .
+
       - name: Run API tests
         working-directory: tests/postman
         run: |
-          docker build -t cinemaabyss-api-tests .
-          docker run --network=cinemaabyss-network -v "$(pwd)/reports:/app/reports" cinemaabyss-api-tests
-      - name: Show Docker Compose logs
+          docker run --rm \
+            --network cinemaabyss-network \
+            -v "$(pwd)/reports:/app/reports" \
+            cinemaabyss-api-tests
+
+      - name: Show compose logs
         if: always()
         run: |
           docker compose ps
           docker compose logs
+
       - name: Stop services
         if: always()
-        run: docker compose down
+        run: docker compose down -v
