@@ -66,6 +66,18 @@ jobs:
       - name: Install Newman and dependencies
         working-directory: tests/postman
         run: npm install
+
+      - name: Test Docker DNS
+        run: |
+          docker run --rm \
+            --network=cinemaabyss-network \
+            alpine sh -c "
+              apk add --no-cache curl bind-tools
+              echo '=== DNS ==='
+              nslookup monolith || true
+              echo '=== CURL ==='
+              curl -v http://monolith:8080/health || true
+            "
       
       - name: Run API tests
         working-directory: tests/postman
