@@ -70,15 +70,17 @@ jobs:
         run: |
           docker compose ps -a
 
+          docker inspect cinemaabyss-monolith --format='Status={{.State.Status}} ExitCode={{.State.ExitCode}}'
+          docker inspect cinemaabyss-movies-service --format='Status={{.State.Status}} ExitCode={{.State.ExitCode}}'
+          docker inspect cinemaabyss-events-service --format='Status={{.State.Status}} ExitCode={{.State.ExitCode}}'
+      - name: Show monolith logs
+        if: always()
+        run: |
           echo "===== MONOLITH ====="
-          docker inspect cinemaabyss-monolith --format='Status={{.State.Status}} RestartCount={{.State.RestartCount}}'
+          docker logs cinemaabyss-monolith || true
 
           echo "===== MOVIES ====="
-          docker inspect cinemaabyss-movies-service --format='Status={{.State.Status}} RestartCount={{.State.RestartCount}}'
-
-          echo "===== EVENTS ====="
-          docker inspect cinemaabyss-events-service --format='Status={{.State.Status}} RestartCount={{.State.RestartCount}}'
-
+          docker logs cinemaabyss-movies-service || true
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
