@@ -66,6 +66,19 @@ jobs:
               curl -v http://monolith:8080/health || true
             '
 
+      - name: Inspect containers
+        run: |
+          docker compose ps -a
+
+          echo "===== MONOLITH ====="
+          docker inspect cinemaabyss-monolith --format='Status={{.State.Status}} RestartCount={{.State.RestartCount}}'
+
+          echo "===== MOVIES ====="
+          docker inspect cinemaabyss-movies-service --format='Status={{.State.Status}} RestartCount={{.State.RestartCount}}'
+
+          echo "===== EVENTS ====="
+          docker inspect cinemaabyss-events-service --format='Status={{.State.Status}} RestartCount={{.State.RestartCount}}'
+
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -89,11 +102,19 @@ jobs:
             -v "$(pwd)/reports:/app/reports" \
             cinemaabyss-api-tests
 
-      - name: Show compose logs
+      - name: Show service logs
         if: always()
         run: |
-          docker compose ps
-          docker compose logs
+          docker compose ps -a
+
+          echo "===== MONOLITH ====="
+          docker logs cinemaabyss-monolith || true
+
+          echo "===== MOVIES ====="
+          docker logs cinemaabyss-movies-service || true
+
+          echo "===== EVENTS ====="
+          docker logs cinemaabyss-events-service || true
 
       - name: Stop services
         if: always()
