@@ -1,0 +1,33 @@
+# Circuit Breaker configuration for CinemaAbyss services.
+# Limits connection pool size so excess load is rejected with HTTP 503.
+# Apply after enabling Istio sidecar injection in the cinemaabyss namespace.
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: movies-service-circuit-breaker
+  namespace: cinemaabyss
+spec:
+  host: movies-service
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: monolith-circuit-breaker
+  namespace: cinemaabyss
+spec:
+  host: monolith
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
